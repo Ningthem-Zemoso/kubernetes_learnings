@@ -1,23 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fastapi-deployment
+  name: celery-worker-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: fastapi
+      app: celery-worker
   template:
     metadata:
       labels:
-        app: fastapi
+        app: celery-worker
     spec:
       containers:
-        - name: fastapi-container
-          image: fastapi-k8s:latest
+        - name: celery-worker-container
+          image: celery-worker-fastapi:latest
           imagePullPolicy: Never
-          ports:
-            - containerPort: 8000
           resources:
             requests:
               cpu: "100m"
@@ -26,13 +24,6 @@ spec:
               cpu: "500m"
               memory: "256Mi"
           env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: fastapi-db-secret
-                  key: DATABASE_URL
-            - name: API_V1_STR
-              value: /api/v1
             - name: CELERY_BROKER_URL
               value: redis://redis-service:6379/0
             - name: CELERY_RESULT_BACKEND

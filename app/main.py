@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from .api.v1.endpoints import router as api_router
+from .api.v1.celery_endpoints import router as celery_router
 from .core.config import settings
 from .database.base import Base, engine
 import logging
@@ -18,6 +19,7 @@ app = FastAPI(title="Product API")
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(celery_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def read_root():
