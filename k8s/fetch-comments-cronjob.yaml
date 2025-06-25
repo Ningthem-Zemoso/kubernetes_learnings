@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: fetch-comments-cronjob
+  labels:
+    app: fetch-comments
+spec:
+  # Run every day at midnight (00:00)
+  schedule: "0 0 * * *"
+  
+  timeZone: "UTC"
+  
+  # Concurrency policy: Forbid overlapping runs
+  concurrencyPolicy: Forbid
+  
+  successfulJobsHistoryLimit: 7  # Keep last 7 successful jobs
+  failedJobsHistoryLimit: 3      # Keep last 3 failed jobs
+  
+  # How long to wait before starting a job if it missed its scheduled time
+  startingDeadlineSeconds: 300
+  
+  # Job template
+  jobTemplate:
+    metadata:
+      labels:
+        app: fetch-comments
+    spec:
+      # Clean up completed jobs after 12 hours
+      ttlSecondsAfterFinished: 43200
+      template:
+        metadata:
+          labels:
+            app: fetch-comments
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: fetch-comments-container
+            image: fetch-comments:latest
+            imagePullPolicy: IfNotPresent
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "100m"
+              limits:
+                memory: "128Mi"
+                cpu: "200m"
+            env:
+            - name: JOB_TYPE
+              value: "daily-comments-fetch"
+            - name: SCHEDULE_TIME
+              value: "midnight"
+            # Mount persistent volume for output
+            volumeMounts:
+            - name: output-volume
+              mountPath: /workspace/output
+          volumes:
+          - name: output-volume
+            persistentVolumeClaim:
+              claimName: jobs-output-pvc
+      backoffLimit: 2

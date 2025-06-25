@@ -1,0 +1,13 @@
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+RUN pip install requests
+
+COPY jobs/fetch_posts.py .
+
+RUN chmod +x fetch_posts.py
+
+# Run the script
+CMD ["python", "fetch_posts.py"]

@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fetch-posts-job
+  labels:
+    app: fetch-posts
+spec:
+  # Number of successful completions needed
+  completions: 1
+  # Number of pods to run in parallel
+  parallelism: 1
+  # Clean up completed jobs
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app: fetch-posts
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: fetch-posts-container
+        image: fetch-posts:latest
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        env:
+        - name: JOB_NAME
+          value: "fetch-posts-job"
+        volumeMounts:
+        - name: output-volume
+          mountPath: /workspace/output
+      volumes:
+      - name: output-volume
+        persistentVolumeClaim:
+          claimName: jobs-output-pvc
+  # Retry policy: retry up to 3 times if the job fails
+  backoffLimit: 3
